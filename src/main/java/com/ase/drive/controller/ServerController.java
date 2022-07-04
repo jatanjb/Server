@@ -1,10 +1,10 @@
-package com.ase.drive.server;
+package com.ase.drive.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.ase.drive.common.FileMetaData;
+import com.ase.drive.utility.FileMetaData;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,29 +24,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-public class Server {
+public class ServerController {
     @GetMapping("/{id}/directoryinfo/existing")
     public FileMetaData[] getExistingFilesData(@PathVariable("id") String userID) {
-        return DirectoryData.shared.readExisitngFileInfoFor(userID);
+        return FolderData.shared.readAddFileInfo(userID);
     }
 
     @GetMapping("/{id}/directoryinfo/deleted")
     public FileMetaData[] getDeletedFilesData(@PathVariable("id") String userID) {
-        return DirectoryData.shared.readDeletedFileInfoFor(userID);
+        return FolderData.shared.readDeletedFileInfo(userID);
     }
 
     @GetMapping("/{id}/file/{filepathBase64}")
     public Resource downloadFile(@PathVariable("id") String userID, @PathVariable String filepathBase64, HttpServletResponse response) throws IOException {
-        String filepathString = new String(Base64.getDecoder().decode(filepathBase64));
-        Path filepath = DirectoryData.shared.fullPathForUser(userID, filepathString);
-        response.setHeader("Content-Disposition", "attachment; filename=" + filepath.getFileName());
-        return new FileSystemResource(filepath);
+        String pathString = new String(Base64.getDecoder().decode(filepathBase64));
+        Path fileLocation = FolderData.shared.pathForUser(userID, pathString);
+        response.setHeader("Content-Disposition", "attachment; filename=" + fileLocation.getFileName());
+        return new FileSystemResource(fileLocation);
     }
 
     @DeleteMapping("/{id}/file/{filepathBase64}")
     public ResponseEntity<?> deleteFile(@PathVariable("id") String userID, @PathVariable String filepathBase64) {
-        String filepath = new String(Base64.getDecoder().decode(filepathBase64));
-        if (DirectoryData.shared.deleteUserFile(userID, filepath)) {
+        String fileLocation = new String(Base64.getDecoder().decode(filepathBase64));
+        if (FolderData.shared.deleteClientFile(userID, fileLocation)) {
             return ResponseEntity.status(HttpStatus.OK).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -59,8 +59,8 @@ public class Server {
         @RequestParam("file") MultipartFile file,
         RedirectAttributes redirectAttributes
     ) {
-        String filepath = new String(Base64.getDecoder().decode(filepathBase64));
-        if (DirectoryData.shared.saveUserFile(userID, file, filepath)) {
+        String fileLocation = new String(Base64.getDecoder().decode(filepathBase64));
+        if (FolderData.shared.uploadClientFile(userID, file, fileLocation)) {
             return ResponseEntity.status(HttpStatus.ACCEPTED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();

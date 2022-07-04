@@ -1,4 +1,4 @@
-package com.ase.drive.common;
+package com.ase.drive.utility;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,9 +105,5 @@ public class FileMetaData {
     
     public String getLastModified() {
         return lastModified.toString();
-    }
-
-    static FileMetaData example() {
-        return new FileMetaData("foo/bar", "0x6469796547", Long.valueOf(1));
     }
 }
